@@ -4,6 +4,7 @@ package traefik_plugin_rewrite_headers
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 )
@@ -85,9 +86,11 @@ func (r *responseWriter) Write(bytes []byte) (int, error) {
 
 func (r *responseWriter) WriteHeader(statusCode int) {
 	for _, rewrite := range r.rewrites {
+		log.Printf("header: %s", rewrite.header)
 		headers := r.writer.Header().Values(rewrite.header)
 
 		if len(headers) == 0 {
+			log.Printf("no values at header: %s", rewrite.header)
 			continue
 		}
 
@@ -96,6 +99,7 @@ func (r *responseWriter) WriteHeader(statusCode int) {
 		for _, header := range headers {
 			value := rewrite.regex.ReplaceAllString(header, rewrite.replacement)
 			r.writer.Header().Add(rewrite.header, value)
+			log.Printf("new header: %s = %s", rewrite.header, value)
 		}
 	}
 
